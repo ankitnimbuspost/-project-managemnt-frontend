@@ -1,0 +1,70 @@
+#chatArea{
+    padding-left: 1% !important;
+    padding-right: 1% !important;
+}
+.image-box .img-1 {
+    width: 40px !important;
+    height: 40px !important;
+}
+.chat-bx-group {
+    padding: 5px 0;
+    cursor: pointer;
+}
+.chat-bx-group .user a {
+    height: 40px;
+    width: 40px;
+    line-height: 40px;
+    font-size: 15px;
+}
+.chat-bx {
+    padding: 5px 0;
+}
+.chat-img img {
+    height: 40px;
+    width: 40px;
+}
+.chat-img .active {
+    height: 10px;
+    width: 10px;
+}
+.fillow-design a {
+    height: 45px;
+    width: 45px;
+    border-radius: 60px;
+    font-size: 20px;
+    line-height: 45px;
+}
+.activity ul li a {
+    padding: 0px 18px 0px 0px;
+    font-size: 18px;
+}
+.message-sent p {
+    border-radius: 0px 15px 0 15px;
+    padding: 7px 10px 7px;
+    font-size: 0.9rem;
+    font-weight: 400;
+}
+.image-box .rounded-circle{
+    height: 30px !important;
+    width: 30px !important;
+}
+.image-box span.active1 {
+    height: 15px;
+    width: 15px;
+    border: 2px solid #fff;
+}
+.message-received p {
+    font-weight: 400;
+    border-radius: 0px 15px 0 15px;
+    padding: 7px 10px 7px;
+    font-size: 0.9rem;
+    font-weight: 400;
+}
+.user-listing{
+    cursor: pointer;
+}
+.profile-image{
+    height: 100%;
+    width: 100%;
+    border-radius: 50%;
+}
