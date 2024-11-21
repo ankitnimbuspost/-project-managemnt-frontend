@@ -42,8 +42,8 @@ function App() {
             <Route path="create-project" element={<CreateProject/>} />
             <Route path="tasks" element={<TasksList/>} />
             <Route path="messages" element={<Messages/>}/>
-            {/* <Route path="*" element={<NotFound/>}/> */}
           </Route>
+          <Route path="*" element={<NotFound/>}/>
         </Routes>
         </Suspense>
       </BrowserRouter>
