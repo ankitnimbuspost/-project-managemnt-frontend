@@ -5,6 +5,7 @@ import Chatbox from "./Chatbox"
 import Sidebar from "./Sidebar";
 import Footer from "./Footer";
 import { Outlet } from "react-router-dom";
+import {authenticateUser} from "../../services/CommonFunction"
 
 export default function Layout(props,{ children }) {
     const [navShow,setNavshow] = useState(null);
@@ -12,7 +13,11 @@ export default function Layout(props,{ children }) {
         console.log("Layout call")
         console.log(props.props);
         if(props.props.role==='dashboard')
+        {
+            if(!authenticateUser())
+            window.location.href = '/signin';
             setNavshow(props.props.role);
+        }
         else
             setNavshow(null);
     },[props])

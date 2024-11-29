@@ -16,6 +16,7 @@ const KanbanTaskList = lazy(()=>import('./components/KanbanTaskList'))
 const ProjectList = lazy(()=>import('./components/ProjectsList'));
 const TasksList = lazy(()=>import('./components/TasksList'));
 const Messages = lazy(()=>import("./components/Messages"));
+const TaskDetails = lazy(()=>import("./components/task/TaskDetails"));
 
 function App() {
   const [role, setRole] = useState('');
@@ -41,6 +42,7 @@ function App() {
             <Route path="projects" element={<ProjectList/>} />
             <Route path="create-project" element={<CreateProject/>} />
             <Route path="tasks" element={<TasksList/>} />
+            <Route path="task-view" element={<TaskDetails/>}/>
             <Route path="messages" element={<Messages/>}/>
           </Route>
           <Route path="*" element={<NotFound/>}/>
