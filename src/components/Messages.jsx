@@ -19,6 +19,7 @@ function Messages() {
     const [groups, setGroups] = useState([]);
     const socketRef = useRef(null);
     const messageTextRef = useRef(null);
+    const messageScrollbarRef = useRef(null);
     let backend_url = process.env.REACT_APP_SOCKET_URL ?? '';
     // For Connection Socket 
     useEffect(() => {
@@ -39,9 +40,9 @@ function Messages() {
     useEffect(() => {
         console.log("user effect call 2");
         getAllPrivateMessages('66b21db5874eedc1d745928d')
-        // sendPrivateMessage();
         getUserGroups();
         getUserList();
+        getNewMessages();
     }, []);
     // Get User Listing 
     function getUserList() {
@@ -63,6 +64,14 @@ function Messages() {
             socketRef.current.off("getUserGroups");
         };
     }
+    //Get New Messages
+    function getNewMessages() {
+        console.log("getNewMessages() call");
+        socketRef.current.on("private_message", (data) => {
+            let new_msg = data.response;
+            setMessages([...messages,new_msg]);
+        });
+    }
     //Get All Private Message Lists
     function getAllPrivateMessages(sender_id) {
         socketRef.current.emit('private_message_list', { sender_id: sender_id});
@@ -70,14 +79,19 @@ function Messages() {
         socketRef.current.off("private_message_list");
 
         socketRef.current.on('private_message_list', (msgList) => {
-            setMessages(msgList.messages)
             console.info("private_message_list event call");
+            if (messageScrollbarRef.current) {
+                setTimeout(() => {
+                    messageScrollbarRef.current.scrollTop = messageScrollbarRef.current.scrollHeight;
+                }, 1000);
+            }
         });
     }
     // Send Private Message 
     function sendPrivateMessage(message,message_type="TEXT",send_to) {
-        console.log({ send_to, message_type, message })
         socketRef.current.emit("private_message", { send_to, message_type, message })
+        // Remove any previous listener for "private_message"
+        socketRef.current.off("private_message");
     }
     // This Function Set Message to User 
     function setMessageTo(user_group_id, type = 'user') {
@@ -103,7 +117,12 @@ function Messages() {
                 let message = $(this).val().trim();
                 if(message!=''){
                     sendPrivateMessage(message,"TEXT",toUserGroup._id);
-                    // getAllPrivateMessages(toUserGroup._id)
+                    getNewMessages();
+                    if (messageScrollbarRef.current) {
+                        setTimeout(() => {
+                            messageScrollbarRef.current.scrollTop = messageScrollbarRef.current.scrollHeight;
+                        }, 1000);
+                    }
                 }
                 $("#message_text").val("");
                 // messageTextRef.current.value 
@@ -249,6 +268,7 @@ function Messages() {
                                                                 wheelPropagation: true,
                                                                 minScrollbarLength: 200
                                                             }}
+                                                            containerRef={(ref) => (messageScrollbarRef.current = ref)}
                                                         // className="justify-content-start"
                                                         >
                                                             {messages.length > 0 ? <>
