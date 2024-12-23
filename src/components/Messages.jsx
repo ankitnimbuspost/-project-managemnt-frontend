@@ -1,11 +1,19 @@
-import { Card, CardContent, Fab, Container, Box, Grid, Paper } from "@mui/material";
+import { Card, CardContent, Fab, Container, Box, Grid, Paper, Tooltip, Button } from "@mui/material";
 import PerfectScrollbar from "react-perfect-scrollbar";
 import 'react-perfect-scrollbar/dist/css/styles.css';
-import React, { useEffect, useRef, useState } from "react";
+import React, { lazy, useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { authenticateUser } from "../services/CommonFunction";
 import "../css/chat-styling.css";
 import $ from "jquery"
+import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
+import InsertEmoticonRoundedIcon from '@mui/icons-material/InsertEmoticonRounded';
+import AlternateEmailRoundedIcon from '@mui/icons-material/AlternateEmailRounded';
+import ShortcutRoundedIcon from '@mui/icons-material/ShortcutRounded';
+import UploadIcon from '@mui/icons-material/Upload';
+import LayersIcon from '@mui/icons-material/Layers';
+import SendRoundedIcon from '@mui/icons-material/SendRounded';
+const DirectUserDialog = lazy(() => import("./chat/DirectUserDialog"));
 
 function Messages() {
     const user = authenticateUser();
@@ -14,9 +22,10 @@ function Messages() {
     // const [message, setMessage] = useState('');
     const [loginUser, setLoginUser] = useState(user)
     const [toUserGroup, setToUserGroup] = useState({});
-    const [isUser,setIsUser] = useState(null);
+    const [isUser, setIsUser] = useState(null);
     const [users, setUsers] = useState([]);
     const [groups, setGroups] = useState([]);
+    const [directUserMessage, setDirectUserMessage] = useState(false);
     const socketRef = useRef(null);
     const messageTextRef = useRef(null);
     const messageScrollbarRef = useRef(null);
@@ -24,8 +33,8 @@ function Messages() {
     // For Connection Socket 
     useEffect(() => {
         console.log("user effect call 1");
-        if(!authenticateUser())
-          window.location.href = '/signin';
+        if (!authenticateUser())
+            window.location.href = '/signin';
         // Only initialize the socket if it hasn't been initialized yet
         if (!socketRef.current) {
             socketRef.current = io(process.env.REACT_APP_SOCKET_URL, {
@@ -69,17 +78,19 @@ function Messages() {
         console.log("getNewMessages() call");
         socketRef.current.on("private_message", (data) => {
             let new_msg = data.response;
-            setMessages([...messages,new_msg]);
+            setMessages([...messages, new_msg]);
         });
     }
     //Get All Private Message Lists
     function getAllPrivateMessages(sender_id) {
-        socketRef.current.emit('private_message_list', { sender_id: sender_id});
+        socketRef.current.emit('private_message_list', { sender_id: sender_id });
         // Remove any previous listener for "private_message_list"
         socketRef.current.off("private_message_list");
 
         socketRef.current.on('private_message_list', (msgList) => {
             console.info("private_message_list event call");
+            console.log(msgList)
+            setMessages(msgList.messages)
             if (messageScrollbarRef.current) {
                 setTimeout(() => {
                     messageScrollbarRef.current.scrollTop = messageScrollbarRef.current.scrollHeight;
@@ -88,14 +99,14 @@ function Messages() {
         });
     }
     // Send Private Message 
-    function sendPrivateMessage(message,message_type="TEXT",send_to) {
+    function sendPrivateMessage(message, message_type = "TEXT", send_to) {
         socketRef.current.emit("private_message", { send_to, message_type, message })
         // Remove any previous listener for "private_message"
         socketRef.current.off("private_message");
     }
     // This Function Set Message to User 
     function setMessageTo(user_group_id, type = 'user') {
-        if(type=='group')
+        if (type == 'group')
             setIsUser(false);
         else
             setIsUser(true);
@@ -110,13 +121,16 @@ function Messages() {
             getAllPrivateMessages(user_group_id)
         });
     }
-    useEffect(()=>{
+    function handleDirectMessageDialog() {
+        setDirectUserMessage(directUserMessage + 1);
+    }
+    useEffect(() => {
         console.log("Use Effect Jquery call")
-        $('#message_text').on('keydown',function(event){
+        $('#message_text').on('keydown', function (event) {
             if (event.key === "Enter" || event.which === 13) { // "Enter" key detected
                 let message = $(this).val().trim();
-                if(message!=''){
-                    sendPrivateMessage(message,"TEXT",toUserGroup._id);
+                if (message != '') {
+                    sendPrivateMessage(message, "TEXT", toUserGroup._id);
                     getNewMessages();
                     if (messageScrollbarRef.current) {
                         setTimeout(() => {
@@ -137,7 +151,7 @@ function Messages() {
         {/* Content body start */}
         <div className="content-body">
             {/* <!-- row --> */}
-            <div className="container-fluid mt-2 pt-1">
+            <div className="container-fluid mt-1 pt-1 chat-container">
                 <div className='row'>
                     <div className='col-12'>
                         <Card elevation={1} className="m-0 p-0">
@@ -146,6 +160,7 @@ function Messages() {
                                     <Grid container item spacing={0.5}>
                                         {/* User/Group Listing start  */}
                                         <Grid item lg={4} md={4} sm={12}>
+                                            {directUserMessage ? <DirectUserDialog status={directUserMessage}></DirectUserDialog> : ""}
                                             <Paper elevation={3}>
                                                 <PerfectScrollbar
                                                     options={{
@@ -186,6 +201,7 @@ function Messages() {
                                                                         </svg>
                                                                     </div>
                                                                     <div className="dropdown-menu dropdown-menu-right">
+                                                                        <a className="dropdown-item" href="javascript:void(0)" onClick={handleDirectMessageDialog}>Direct Message</a>
                                                                         <a className="dropdown-item" href="javascript:void(0)">Delete</a>
                                                                         <a className="dropdown-item" href="javascript:void(0)">Edit</a>
                                                                     </div>
@@ -198,9 +214,9 @@ function Messages() {
                                                                     <div className="chat-bx user-listing border-bottom" onClick={() => setMessageTo(user._id)}>
                                                                         <div className="px-3 d-flex">
                                                                             <div className="chat-img">
-                                                                                {user.profile_image!=undefined && user.profile_image!='' ? <>
-                                                                                <img src={`${backend_url}/${user.profile_image}`} alt="" />
-                                                                                <span className="active"></span>
+                                                                                {user.profile_image != undefined && user.profile_image != '' ? <>
+                                                                                    <img src={`${backend_url}/${user.profile_image}`} alt="" />
+                                                                                    <span className="active"></span>
                                                                                 </> : <>
                                                                                     <img src="/assets/images/contacts/pic22.jpg" alt="" />
                                                                                     <span className="active"></span>
@@ -231,9 +247,9 @@ function Messages() {
                                                 <div className="d-flex justify-content-between align-items-center border-bottom px-3 pt-2 flex-wrap">
                                                     <div className="d-flex align-items-center pb-2">
                                                         <div className="fillow-design">
-                                                            <a href="javascript:void(0);">{toUserGroup.profile_image!=undefined && toUserGroup.profile_image!='' ? <>
-                                                                <img src={`${backend_url}/${toUserGroup.profile_image}`} className="img-fluid profile-image"/>
-                                                            </> : <i class="fas fa-user-friends"/>}</a>
+                                                            <a href="javascript:void(0);">{toUserGroup.profile_image != undefined && toUserGroup.profile_image != '' ? <>
+                                                                <img src={`${backend_url}/${toUserGroup.profile_image}`} className="img-fluid profile-image" />
+                                                            </> : <i class="fas fa-user-friends" />}</a>
                                                         </div>
                                                         <div className="ms-3">
                                                             <h4 className="fs-20 font-w700 m-0 p-0">{toUserGroup.f_name} {toUserGroup.l_name}</h4>
@@ -318,9 +334,29 @@ function Messages() {
                                                 </div>
                                                 <div className="card-footer border-0 type-massage">
                                                     <div className="input-group">
-                                                        <textarea className="form-control" ref={messageTextRef}  id="message_text" rows="3" placeholder="Send to Ankit"></textarea>
+                                                        <textarea className="form-control" ref={messageTextRef} id="message_text" rows="3" placeholder="Send to Ankit"></textarea>
                                                     </div>
-
+                                                    <div className="row footer-buttons">
+                                                        <div className="col-6 activity d-flex align-items-center pb-0 pt-0">
+                                                            <div className="dropdown ms-2" style={{marginRight:"14px"}}>
+                                                                <div className="btn-link" data-bs-toggle="dropdown">
+                                                                <a href="#"><Tooltip title="Attach files"><AddCircleRoundedIcon ></AddCircleRoundedIcon></Tooltip></a>
+                                                                </div>
+                                                                <div className="dropdown-menu upload-dropdown dropdown-menu-right">
+                                                                    <a className="dropdown-item" href="#"><UploadIcon></UploadIcon> Upload from your computer</a>
+                                                                    <a className="dropdown-item" href="#"><LayersIcon></LayersIcon> Recent files</a>
+                                                                </div>
+                                                            </div>
+                                                            <ul className="d-flex">
+                                                                <li><a href="#"><Tooltip title="Insert Emoji"><InsertEmoticonRoundedIcon></InsertEmoticonRoundedIcon></Tooltip></a></li>
+                                                                <li><a href="#"><Tooltip title="Mention Someone"><AlternateEmailRoundedIcon></AlternateEmailRoundedIcon></Tooltip></a></li>
+                                                                <li><a href="#"><Tooltip title="Run Shortcut"><ShortcutRoundedIcon ></ShortcutRoundedIcon></Tooltip></a></li>
+                                                            </ul>
+                                                        </div>
+                                                        <div className="col-6 sent-button">
+                                                            <Button size="small" color="success" id="send-button" variant="contained" href="#"><SendRoundedIcon fontSize="small" /></Button>
+                                                        </div>
+                                                    </div>    
                                                 </div>
                                             </Paper>
                                         </Grid>

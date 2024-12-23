@@ -68,3 +68,31 @@
     width: 100%;
     border-radius: 50%;
 }
+.chat-container{
+    padding-left: 6px !important;
+    padding-right: 5px !important;
+}
+.card-footer:last-child{
+    border: 1.5px solid #00a15d !important;
+    padding: 0px !important;
+    border-radius: 0.5rem;
+    margin: 1px 5px 5px 5px !important;
+}
+.type-massage .input-group textarea{
+    border: unset !important;
+}
+#message_text{
+    border-radius: 0.5rem !important;
+    height: 4.5rem;
+    resize: none;
+    /* background-color: aliceblue; */
+}
+.upload-dropdown{
+    transform: translate(-5px, -23px);
+    border-radius: 5px;
+}
+#send-button{
+    float: right;
+    margin-right: 0.7rem;
+    height: 25px;
+}
