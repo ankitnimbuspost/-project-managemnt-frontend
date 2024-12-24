@@ -77,13 +77,14 @@
     padding: 0px !important;
     border-radius: 0.5rem;
     margin: 1px 5px 5px 5px !important;
+    width: 99%;
 }
 .type-massage .input-group textarea{
     border: unset !important;
 }
 #message_text{
     border-radius: 0.5rem !important;
-    height: 4.5rem;
+    height: 4rem;
     resize: none;
     /* background-color: aliceblue; */
 }
@@ -95,4 +96,39 @@
     float: right;
     margin-right: 0.7rem;
     height: 25px;
+}
+.file-name{
+    white-space: nowrap; /* Prevents wrapping to a new line */
+    overflow: hidden;    /* Hides overflowing text */
+    text-overflow: ellipsis;
+    line-height: normal;
+    margin: 0px;
+    padding: 0px;
+}
+.uploaded-files{
+    margin: 1px 1px 2px 1px !important;
+    /* background-color: aliceblue; */
+}
+.round-ext{
+    border: 1px solid #00a15d;
+    height: 2.3rem;
+    width: 2.3rem;
+    border-radius: 10%;
+    margin: 4px;
+    padding-left: 17%;
+}
+.file .row{
+    border: 1px solid rgba(0, 0, 0, .125);
+    border-radius: .25rem;
+}
+.msg-container, .list-container,.chart-container{
+    max-height: 550px;
+    height: 550px;
+}
+.clear-file{
+    position: absolute;
+    right: -10px;
+    top: -14px;
+    cursor: pointer;
+    /* display: none !important; */
 }

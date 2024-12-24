@@ -1,9 +1,9 @@
-import { Card, CardContent, Fab, Container, Box, Grid, Paper, Tooltip, Button } from "@mui/material";
+import { Card, CardContent, Fab, Container, Box, Grid, Paper, Tooltip, Button, Typography } from "@mui/material";
 import PerfectScrollbar from "react-perfect-scrollbar";
 import 'react-perfect-scrollbar/dist/css/styles.css';
 import React, { lazy, useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
-import { authenticateUser } from "../services/CommonFunction";
+import { authenticateUser,formatFiles } from "../services/CommonFunction";
 import "../css/chat-styling.css";
 import $ from "jquery"
 import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
@@ -13,6 +13,7 @@ import ShortcutRoundedIcon from '@mui/icons-material/ShortcutRounded';
 import UploadIcon from '@mui/icons-material/Upload';
 import LayersIcon from '@mui/icons-material/Layers';
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
+const DisplayUploadedFiles = lazy(() => import("./chat/DisplayUploadedFiles"));
 const DirectUserDialog = lazy(() => import("./chat/DirectUserDialog"));
 
 function Messages() {
@@ -27,8 +28,10 @@ function Messages() {
     const [groups, setGroups] = useState([]);
     const [directUserMessage, setDirectUserMessage] = useState(false);
     const socketRef = useRef(null);
+    const fileInputRef = useRef(null);
     const messageTextRef = useRef(null);
     const messageScrollbarRef = useRef(null);
+    const [files, setFiles] = useState([]);
     let backend_url = process.env.REACT_APP_SOCKET_URL ?? '';
     // For Connection Socket 
     useEffect(() => {
@@ -73,12 +76,11 @@ function Messages() {
             socketRef.current.off("getUserGroups");
         };
     }
-    //Get New Messages
+    //Get New Messages When user send or receiver get message
     function getNewMessages() {
-        console.log("getNewMessages() call");
         socketRef.current.on("private_message", (data) => {
             let new_msg = data.response;
-            setMessages([...messages, new_msg]);
+            setMessages((prevMsg) => [...prevMsg, new_msg]);
         });
     }
     //Get All Private Message Lists
@@ -132,11 +134,17 @@ function Messages() {
                 if (message != '') {
                     sendPrivateMessage(message, "TEXT", toUserGroup._id);
                     getNewMessages();
-                    if (messageScrollbarRef.current) {
-                        setTimeout(() => {
-                            messageScrollbarRef.current.scrollTop = messageScrollbarRef.current.scrollHeight;
-                        }, 1000);
-                    }
+                }
+                // Here Send Files if file exists 
+                Array.from(files).forEach((file, index) => {
+                    sendPrivateMessage(file.url, file.extension, toUserGroup._id);
+                    getNewMessages();
+                });
+                setFiles([]);
+                if (messageScrollbarRef.current) {
+                    setTimeout(() => {
+                        messageScrollbarRef.current.scrollTop = messageScrollbarRef.current.scrollHeight;
+                    }, 1000);
                 }
                 $("#message_text").val("");
                 // messageTextRef.current.value 
@@ -146,6 +154,17 @@ function Messages() {
             $('#message_text').off('keydown');
         };
     });
+    // for handle upload file 
+    const handleUploadFileChange = (event) => {
+        formatFiles(event.target.files).then((formattedFiles)=>{
+            console.log(formattedFiles)
+            setFiles((prevFiles) => [...prevFiles, ...formattedFiles]);
+            event.target.value = '';
+        }).catch((e)=>console.log(e.message));
+    }
+    const handleChildData = (data) => {
+        setFiles(data); // Update parent's state
+    };
 
     return (<>
         {/* Content body start */}
@@ -159,7 +178,7 @@ function Messages() {
                                 <Container className='m-0 p-0' maxWidth="lg">
                                     <Grid container item spacing={0.5}>
                                         {/* User/Group Listing start  */}
-                                        <Grid item lg={4} md={4} sm={12}>
+                                        <Grid item lg={4} md={4} sm={12} className="list-container">
                                             {directUserMessage ? <DirectUserDialog status={directUserMessage}></DirectUserDialog> : ""}
                                             <Paper elevation={3}>
                                                 <PerfectScrollbar
@@ -169,7 +188,6 @@ function Messages() {
                                                         minScrollbarLength: 200
                                                     }}
                                                     className="chart-container m-0 p-0"
-                                                    style={{ height: "500px" }}
                                                 >
                                                     <div className="dlab-scroll chat-sidebar" style={{ height: "100%" }} id="chatSidebar">
                                                         <div className="d-flex align-items-center justify-content-between px-2">
@@ -242,7 +260,7 @@ function Messages() {
                                         </Grid>
                                         {/* End  */}
                                         {/* Chat Functionality Start  */}
-                                        <Grid item lg={8} md={8} sm={12} style={{ height: "500px" }}>
+                                        <Grid item lg={8} md={8} sm={12} className="msg-container">
                                             <Paper elevation={3}>
                                                 <div className="d-flex justify-content-between align-items-center border-bottom px-3 pt-2 flex-wrap">
                                                     <div className="d-flex align-items-center pb-2">
@@ -336,14 +354,17 @@ function Messages() {
                                                     <div className="input-group">
                                                         <textarea className="form-control" ref={messageTextRef} id="message_text" rows="3" placeholder="Send to Ankit"></textarea>
                                                     </div>
+                                                    <DisplayUploadedFiles onDataChange={handleChildData} data={files}></DisplayUploadedFiles>
+                                                    {/* Message Button Footer Start  */}
                                                     <div className="row footer-buttons">
                                                         <div className="col-6 activity d-flex align-items-center pb-0 pt-0">
-                                                            <div className="dropdown ms-2" style={{marginRight:"14px"}}>
+                                                            <div className="dropdown ms-2" style={{ marginRight: "14px" }}>
                                                                 <div className="btn-link" data-bs-toggle="dropdown">
-                                                                <a href="#"><Tooltip title="Attach files"><AddCircleRoundedIcon ></AddCircleRoundedIcon></Tooltip></a>
+                                                                    <a href="#"><Tooltip title="Attach files"><AddCircleRoundedIcon ></AddCircleRoundedIcon></Tooltip></a>
                                                                 </div>
                                                                 <div className="dropdown-menu upload-dropdown dropdown-menu-right">
-                                                                    <a className="dropdown-item" href="#"><UploadIcon></UploadIcon> Upload from your computer</a>
+                                                                    <input type="file" multiple ref={fileInputRef} style={{ display: "none" }} onChange={handleUploadFileChange} />
+                                                                    <a className="dropdown-item" onClick={() => fileInputRef.current.click()} href="#"><UploadIcon></UploadIcon> Upload from your computer</a>
                                                                     <a className="dropdown-item" href="#"><LayersIcon></LayersIcon> Recent files</a>
                                                                 </div>
                                                             </div>
@@ -356,7 +377,8 @@ function Messages() {
                                                         <div className="col-6 sent-button">
                                                             <Button size="small" color="success" id="send-button" variant="contained" href="#"><SendRoundedIcon fontSize="small" /></Button>
                                                         </div>
-                                                    </div>    
+                                                    </div>
+                                                    {/* Message Button Footer End  */}
                                                 </div>
                                             </Paper>
                                         </Grid>
