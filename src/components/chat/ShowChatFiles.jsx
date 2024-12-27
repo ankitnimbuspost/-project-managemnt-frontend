@@ -9,7 +9,7 @@ export default function ShowChatFiles({ file }) {
     const [parsedData, setParsedData] = useState([]);
 
     useEffect(() => {
-        if (file.message_type === "csv") {
+        if (file.message_type.toLowerCase() === "csv") {
             fetch(file.message)
                 .then((response) => response.text())
                 .then((csvText) => {
@@ -17,15 +17,29 @@ export default function ShowChatFiles({ file }) {
                     setParsedData(data.data.slice(0, 20)); // Only keep the first 20 rows
                 })
                 .catch((error) => console.error("Error loading CSV:", error));
-        } else if (["xls", "xlsx"].includes(file.message_type)) {
+        } else if (["xls", "xlsx"].includes(file.message_type.toLowerCase())) {
             fetch(file.message)
                 .then((response) => response.arrayBuffer())
                 .then((buffer) => {
+                    // Read the Excel file with XLSX library
                     const workbook = XLSX.read(buffer, { type: "array" });
+                    // Get the first sheet name
                     const sheetName = workbook.SheetNames[0];
+                    // Access the first sheet
                     const worksheet = workbook.Sheets[sheetName];
-                    const data = XLSX.utils.sheet_to_json(worksheet);
-                    setParsedData(data.slice(0, 20)); // Only keep the first 20 rows
+                    const rows = [];
+                    // Loop through each row of the worksheet
+                    for (let rowIndex = 0; rowIndex < 20; rowIndex++) {
+                        // Get the data from the row
+                        const row = XLSX.utils.sheet_to_json(worksheet, {
+                            header: 1, // Read as an array of rows
+                            range: rowIndex, // Get a specific row range
+                            raw: true,
+                        });
+                        if (row && row.length > 0)
+                            rows.push(row[0]);
+                    }
+                    setParsedData(rows);
                 })
                 .catch((error) => console.error("Error loading Excel:", error));
         }
@@ -225,23 +239,25 @@ export default function ShowChatFiles({ file }) {
                 },
             }}
         >
-            {renderPreview()}
-            <ImageListItemBar
-                title={file.message_type.toUpperCase()}
-                subtitle={file.name || "Unknown File"}
-                actionIcon={
-                    <IconButton
-                        sx={{ color: "rgba(255, 255, 255, 0.54)" }}
-                        aria-label={`info about ${file.message}`}
-                    >
-                        <InfoIcon />
-                    </IconButton>
-                }
-                sx={{
-                    padding: "0px",
-                    height: "40px",
-                }}
-            />
+            <div>
+                {renderPreview()}
+                <ImageListItemBar
+                    title={file.message_type.toUpperCase()}
+                    subtitle={file.message.split("/").pop() || "Unknown File"}
+                    actionIcon={
+                        <IconButton
+                            sx={{ color: "rgba(255, 255, 255, 0.54)" }}
+                            aria-label={`info about ${file.message}`}
+                        >
+                            <InfoIcon />
+                        </IconButton>
+                    }
+                    sx={{
+                        padding: "0px",
+                        height: "40px",
+                    }}
+                />
+            </div>
         </ImageListItem>
     );
 }

@@ -1,3 +1,4 @@
+const moment = require("moment");
 const { default: callApis } = require("./CallAPI");
 module.exports.convertBase64 =  async function(file){
     return new Promise((resolve,reject)=>{
@@ -150,3 +151,6 @@ module.exports.formatFiles = async function(files){
         return []
     }
 }
+module.exports.convertChatDateTime = function(timestamp){
+    return moment.unix(timestamp).format("dddd, MMMM Do, YYYY [at] h:mm A");
+};
