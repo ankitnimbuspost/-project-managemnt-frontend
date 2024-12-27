@@ -1,10 +1,86 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import InfoIcon from "@mui/icons-material/Info";
 import { IconButton, ImageListItem, ImageListItemBar } from "@mui/material";
+import DocViewer, { DocViewerRenderers } from "react-doc-viewer";
+import * as XLSX from "xlsx";
+import Papa from "papaparse";
 
 export default function ShowChatFiles({ file }) {
+    const [parsedData, setParsedData] = useState([]);
+
+    useEffect(() => {
+        if (file.message_type === "csv") {
+            fetch(file.message)
+                .then((response) => response.text())
+                .then((csvText) => {
+                    const data = Papa.parse(csvText, { header: true });
+                    setParsedData(data.data.slice(0, 20)); // Only keep the first 20 rows
+                })
+                .catch((error) => console.error("Error loading CSV:", error));
+        } else if (["xls", "xlsx"].includes(file.message_type)) {
+            fetch(file.message)
+                .then((response) => response.arrayBuffer())
+                .then((buffer) => {
+                    const workbook = XLSX.read(buffer, { type: "array" });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const data = XLSX.utils.sheet_to_json(worksheet);
+                    setParsedData(data.slice(0, 20)); // Only keep the first 20 rows
+                })
+                .catch((error) => console.error("Error loading Excel:", error));
+        }
+    }, [file.message, file.message_type]);
+
+    const renderTable = () => {
+        if (parsedData.length === 0) return <p>No data available</p>;
+
+        return (
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                    <tr>
+                        {Object.keys(parsedData[0] || {}).map((key) => (
+                            <th
+                                key={key}
+                                style={{
+                                    border: "1px solid #ddd",
+                                    padding: "8px",
+                                    textAlign: "left",
+                                    background: "#f1f1f1",
+                                }}
+                            >
+                                {key}
+                            </th>
+                        ))}
+                    </tr>
+                </thead>
+                <tbody>
+                    {parsedData.map((row, index) => (
+                        <tr key={index}>
+                            {Object.values(row).map((cell, idx) => (
+                                <td
+                                    key={idx}
+                                    style={{
+                                        border: "1px solid #ddd",
+                                        padding: "8px",
+                                    }}
+                                >
+                                    {cell}
+                                </td>
+                            ))}
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        );
+    };
+
     const renderPreview = () => {
         const fileExtension = file.message_type.toLowerCase();
+        const commonStyles = {
+            width: "100%",
+            border: "none",
+        };
+
         switch (fileExtension) {
             case "jpg":
             case "jpeg":
@@ -14,13 +90,13 @@ export default function ShowChatFiles({ file }) {
                 return (
                     <img
                         src={file.message}
-                        alt={file.message_type + " file"}
+                        alt={`${file.message_type} file`}
                         loading="lazy"
                         style={{
-                            width: "100%", // Full width of container
-                            height: "auto", // Maintain aspect ratio
-                            objectFit: "cover", // Ensures the image covers the container area
-                            maxHeight: "300px", // Optional: Limit the maximum height
+                            ...commonStyles,
+                            height: "auto",
+                            objectFit: "cover",
+                            maxHeight: "300px",
                         }}
                     />
                 );
@@ -28,11 +104,10 @@ export default function ShowChatFiles({ file }) {
                 return (
                     <iframe
                         src={file.message}
-                        alt={file.message_type + " file"}
+                        title={`${file.message_type} preview`}
                         style={{
-                            width: "100%",
+                            ...commonStyles,
                             height: "250px",
-                            border: "none",
                         }}
                     />
                 );
@@ -44,7 +119,7 @@ export default function ShowChatFiles({ file }) {
                         controls
                         src={file.message}
                         style={{
-                            width: "100%",
+                            ...commonStyles,
                             height: "auto",
                             maxHeight: "300px",
                         }}
@@ -72,9 +147,8 @@ export default function ShowChatFiles({ file }) {
                         readOnly
                         value={file.message || "No content available"}
                         style={{
-                            width: "100%",
+                            ...commonStyles,
                             height: "300px",
-                            border: "none",
                             padding: "8px",
                             background: "#f5f5f5",
                             fontFamily: "monospace",
@@ -83,29 +157,35 @@ export default function ShowChatFiles({ file }) {
                 );
             case "doc":
             case "docx":
-                return (
-                    <iframe
-                        src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(file.message)}`}
-                        style={{
-                            width: "100%",
-                            height: "250px",
-                            border: "none",
-                        }}
-                        title="Word document preview"
-                    />
+                return (<></>
+                    // <DocViewer
+                    //     documents={[{ uri: file.message }]}
+                    //     pluginRenderers={DocViewerRenderers}
+                    //     style={{
+                    //         height: "300px",
+                    //         ...commonStyles,
+                    //     }}
+                    // />
                 );
+            case "csv":
             case "xls":
             case "xlsx":
                 return (
-                    <iframe
-                        src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(file.message)}`}
+                    <div
                         style={{
-                            width: "100%",
-                            height: "250px",
-                            border: "none",
+                            maxHeight: "300px",
+                            overflowY: "auto",
+                            background: "#f9f9f9",
+                            padding: "10px",
+                            border: "1px solid #ddd",
                         }}
-                        title="Excel document preview"
-                    />
+                    >
+                        {parsedData.length > 0 ? (
+                            renderTable()
+                        ) : (
+                            <p>Loading preview...</p>
+                        )}
+                    </div>
                 );
             default:
                 return (
@@ -125,7 +205,7 @@ export default function ShowChatFiles({ file }) {
                             download
                             style={{ textDecoration: "none", color: "#007bff" }}
                         >
-                            Download {file.message}
+                            Download {file.name || "file"}
                         </a>
                     </div>
                 );
@@ -139,16 +219,16 @@ export default function ShowChatFiles({ file }) {
                 boxShadow: 3,
                 borderRadius: 2,
                 overflow: "hidden",
-                margin: "auto", // Center the item
+                margin: "auto",
                 "&:hover": {
-                    boxShadow: 8, // Elevation on hover
+                    boxShadow: 8,
                 },
             }}
         >
             {renderPreview()}
             <ImageListItemBar
-                title={file.message_type}
-                subtitle={file.message_type || "Unknown"}
+                title={file.message_type.toUpperCase()}
+                subtitle={file.name || "Unknown File"}
                 actionIcon={
                     <IconButton
                         sx={{ color: "rgba(255, 255, 255, 0.54)" }}
@@ -158,8 +238,8 @@ export default function ShowChatFiles({ file }) {
                     </IconButton>
                 }
                 sx={{
-                    padding: "0px", // Reduce padding for smaller size
-                    height: "40px", // Reduce the height of the bottom bar
+                    padding: "0px",
+                    height: "40px",
                 }}
             />
         </ImageListItem>
