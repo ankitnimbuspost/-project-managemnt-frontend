@@ -15,6 +15,7 @@ import LayersIcon from '@mui/icons-material/Layers';
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
 const DisplayUploadedFiles = lazy(() => import("./chat/DisplayUploadedFiles"));
 const DirectUserDialog = lazy(() => import("./chat/DirectUserDialog"));
+const ChatList = lazy(()=>import("./chat/ChatList"))
 
 function Messages() {
     const user = authenticateUser();
@@ -178,7 +179,7 @@ function Messages() {
                                 <Container className='m-0 p-0' maxWidth="lg">
                                     <Grid container item spacing={0.5}>
                                         {/* User/Group Listing start  */}
-                                        <Grid item lg={4} md={4} sm={12} className="list-container">
+                                        <Grid item lg={4} md={4} sm={12} className={files.length>0 ? "list-container hightup" : "list-container"}>
                                             {directUserMessage ? <DirectUserDialog status={directUserMessage}></DirectUserDialog> : ""}
                                             <Paper elevation={3}>
                                                 <PerfectScrollbar
@@ -187,7 +188,7 @@ function Messages() {
                                                         wheelPropagation: true,
                                                         minScrollbarLength: 200
                                                     }}
-                                                    className="chart-container m-0 p-0"
+                                                    className={files.length>0 ? "chart-container hightup m-0 p-0" : "chart-container m-0 p-0"}
                                                 >
                                                     <div className="dlab-scroll chat-sidebar" style={{ height: "100%" }} id="chatSidebar">
                                                         <div className="d-flex align-items-center justify-content-between px-2">
@@ -260,7 +261,7 @@ function Messages() {
                                         </Grid>
                                         {/* End  */}
                                         {/* Chat Functionality Start  */}
-                                        <Grid item lg={8} md={8} sm={12} className="msg-container">
+                                        <Grid item lg={8} md={8} sm={12} className={files.length>0 ? "msg-container hightup" : "msg-container"}>
                                             <Paper elevation={3}>
                                                 <div className="d-flex justify-content-between align-items-center border-bottom px-3 pt-2 flex-wrap">
                                                     <div className="d-flex align-items-center pb-2">
@@ -303,50 +304,8 @@ function Messages() {
                                                                 minScrollbarLength: 200
                                                             }}
                                                             containerRef={(ref) => (messageScrollbarRef.current = ref)}
-                                                        // className="justify-content-start"
                                                         >
-                                                            {messages.length > 0 ? <>
-                                                                {messages.map((msg, index) => {
-                                                                    let colorType = "message-received";
-                                                                    let className = "justify-content-start align-items-start";
-                                                                    if (msg.sender_id == loginUser._id) {
-                                                                        className = "justify-content-end align-items-end";
-                                                                        colorType = "message-sent";
-                                                                        //This Means getting data which is sent by me.
-                                                                        return (<>
-                                                                            <div className={`media my-4 justify-content-end align-items-end`}>
-                                                                                <div className="message-sent">
-                                                                                    <p className="mb-1">
-                                                                                        {msg.message}
-                                                                                    </p>
-                                                                                    <span className="fs-12">Sunday, October 24th, 2020  at 4.30 AM</span>
-                                                                                </div>
-                                                                                <div className="image-box ms-sm-1 ms-2 mb-4">
-                                                                                    <img src="/assets/images/contacts/3.jpg" alt="" className="rounded-circle img-1" />
-                                                                                    <span className="active"></span>
-                                                                                </div>
-                                                                            </div>
-                                                                        </>);
-                                                                    }
-                                                                    else {
-                                                                        //This Means getting data which is sent by Other
-                                                                        return (<>
-                                                                            <div className={`media my-4 ${className}`}>
-                                                                                <div className="image-box me-sm-1 me-2">
-                                                                                    <img src="/assets/images/group/g1.jpg" alt="" className="rounded-circle img-1" />
-                                                                                    <span className="active1"></span>
-                                                                                </div>
-                                                                                <div className={`${colorType}`}>
-                                                                                    <p className="mb-1">
-                                                                                        {msg.message}
-                                                                                    </p>
-                                                                                    <span className="fs-12">Sunday, October 24th, 2020  at 4.30 AM</span>
-                                                                                </div>
-                                                                            </div>
-                                                                        </>);
-                                                                    }
-                                                                })}
-                                                            </> : <center><p>Not communication yet</p></center>}
+                                                        <ChatList messages={messages} loginUser={loginUser}></ChatList>
                                                         </PerfectScrollbar>
                                                     </div>
                                                 </div>

@@ -37,97 +37,99 @@ export default function DisplayUploadedFiles({ onDataChange, data }) {
         }
     };
 
-    return (
-        <Box sx={{ position: 'relative', width: '100%' }}>
-            {/* Left Navigation Button */}
-            {data.length > 0 ? <>
-                <IconButton
-                    onClick={scrollLeft}
+    return (<>
+        {data.length > 0 ? <>
+            <Box sx={{ position: 'relative', width: '100%' }} className="m-0 p-0">
+                {/* Left Navigation Button */}
+                {data.length > 0 ? <>
+                    <IconButton
+                        onClick={scrollLeft}
+                        sx={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: -20,
+                            transform: 'translateY(-50%)',
+                            zIndex: 1,
+                            backgroundColor: 'white',
+                            border: "1.5px solid #00a15d",
+                            color: 'black',
+                            '&:hover': {
+                                backgroundColor: '#b6b6b6',
+                            },
+                        }}
+                        size='small'
+                    >
+                        <ArrowBackIosIcon />
+                    </IconButton>
+                </> : ""}
+
+                {/* Carousel Container */}
+                <Box
+                    ref={scrollRef}
                     sx={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: -20,
-                        transform: 'translateY(-50%)',
-                        zIndex: 1,
-                        backgroundColor: 'white',
-                        border: "1.5px solid #00a15d",
-                        color: 'black',
-                        '&:hover': {
-                            backgroundColor: '#b6b6b6',
+                        display: 'flex',
+                        gap: 1,
+                        py: 1,
+                        overflow: 'auto',
+                        scrollSnapType: 'x mandatory',
+                        '& > *': {
+                            scrollSnapAlign: 'center',
                         },
+                        '::-webkit-scrollbar': { display: 'none' },
+
                     }}
-                    size='small'
+                    style={{ width: '100%' }}
                 >
-                    <ArrowBackIosIcon />
-                </IconButton>
-            </> : ""}
-
-            {/* Carousel Container */}
-            <Box
-                ref={scrollRef}
-                sx={{
-                    display: 'flex',
-                    gap: 1,
-                    py: 1,
-                    overflow: 'auto',
-                    scrollSnapType: 'x mandatory',
-                    '& > *': {
-                        scrollSnapAlign: 'center',
-                    },
-                    '::-webkit-scrollbar': { display: 'none' },
-
-                }}
-                style={{ width: '100%' }}
-            >
-                {data.map((item, index) => (
-                    <div className="col-4 file m-0 p-0" key={index}>
-                        <div className="row m-0 p-0 pr-1 pt-1">
-                            <div className="col-3 m-0 p-0">
-                                <div className="round-ext">
-                                    <h3>{item.description.charAt(0).toUpperCase() || ''}</h3>
+                    {data.map((item, index) => (
+                        <div className="col-4 file m-0 p-0" key={index}>
+                            <div className="row m-0 p-0 pr-1 pt-1">
+                                <div className="col-3 m-0 p-0">
+                                    <div className="round-ext">
+                                        <h3>{item.description.charAt(0).toUpperCase() || ''}</h3>
+                                    </div>
+                                </div>
+                                <div
+                                    className="col-9 m-0 p-0"
+                                    style={{ position: 'relative' }}
+                                >
+                                    <Tooltip title="Delete file">
+                                        <CancelIcon className="clear-file" onClick={() => sendDataToParent(item.url)} />
+                                    </Tooltip>
+                                    <p className="file-name">
+                                        <Tooltip title={item.name}>
+                                            <strong>{item.name}</strong>
+                                        </Tooltip>
+                                    </p>
+                                    <small className="file-name">{item.description} ({item.size} MB)</small>
                                 </div>
                             </div>
-                            <div
-                                className="col-9 m-0 p-0"
-                                style={{ position: 'relative' }}
-                            >
-                                <Tooltip title="Delete file">
-                                    <CancelIcon className="clear-file" onClick={() => sendDataToParent(item.url)} />
-                                </Tooltip>
-                                <p className="file-name">
-                                    <Tooltip title={item.name}>
-                                        <strong>{item.name}</strong>
-                                    </Tooltip>
-                                </p>
-                                <small className="file-name">{item.description} ({item.size} MB)</small>
-                            </div>
                         </div>
-                    </div>
-                ))}
-            </Box>
+                    ))}
+                </Box>
 
-            {/* Right Navigation Button */}
-            {data.length > 0 ? <>
-                <IconButton
-                    onClick={scrollRight}
-                    sx={{
-                        position: 'absolute',
-                        top: '50%',
-                        right: -20,
-                        transform: 'translateY(-50%)',
-                        zIndex: 1,
-                        backgroundColor: 'white',
-                        border: "1.5px solid #00a15d",
-                        color: 'black',
-                        '&:hover': {
-                            backgroundColor: '#b6b6b6',
-                        },
-                    }}
-                    size='small'
-                >
-                    <ArrowForwardIosIcon />
-                </IconButton>
-            </> : ""}
-        </Box>
-    );
+                {/* Right Navigation Button */}
+                {data.length > 0 ? <>
+                    <IconButton
+                        onClick={scrollRight}
+                        sx={{
+                            position: 'absolute',
+                            top: '50%',
+                            right: -20,
+                            transform: 'translateY(-50%)',
+                            zIndex: 1,
+                            backgroundColor: 'white',
+                            border: "1.5px solid #00a15d",
+                            color: 'black',
+                            '&:hover': {
+                                backgroundColor: '#b6b6b6',
+                            },
+                        }}
+                        size='small'
+                    >
+                        <ArrowForwardIosIcon />
+                    </IconButton>
+                </> : ""}
+            </Box>
+        </> : ""}
+    </>);
 }

@@ -123,6 +123,9 @@
 }
 .msg-container, .list-container,.chart-container{
     max-height: 550px;
+    height: 500px;
+}
+.hightup{
     height: 550px;
 }
 .clear-file{
