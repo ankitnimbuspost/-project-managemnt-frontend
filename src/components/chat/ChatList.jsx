@@ -1,4 +1,4 @@
-import React, { lazy } from "react";
+import React, { Suspense, lazy } from "react";
 import {convertChatDateTime} from "../../services/CommonFunction"
 const ShowChatFiles = lazy(() => import("./ShowChatFiles"));
 export default function ChatList({ messages, loginUser }) {
@@ -25,7 +25,7 @@ export default function ChatList({ messages, loginUser }) {
                                 {msg.message_type.toLowerCase() === "text" ? (
                                     <p className="mb-1">{msg.message}</p>
                                 ) : (
-                                    <ShowChatFiles file={msg} />
+                                    <Suspense fallback={<div>Loading file...</div>}> <ShowChatFiles file={msg} /></Suspense>
                                 )}
                                 <span className="fs-12">{convertChatDateTime(msg.created)}</span>
                             </div>

@@ -1,9 +1,9 @@
 import { Card, CardContent, Fab, Container, Box, Grid, Paper, Tooltip, Button, Typography } from "@mui/material";
 import PerfectScrollbar from "react-perfect-scrollbar";
 import 'react-perfect-scrollbar/dist/css/styles.css';
-import React, { lazy, useEffect, useRef, useState } from "react";
+import React, { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
-import { authenticateUser,formatFiles } from "../services/CommonFunction";
+import { authenticateUser, formatFiles } from "../services/CommonFunction";
 import "../css/chat-styling.css";
 import $ from "jquery"
 import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
@@ -15,7 +15,7 @@ import LayersIcon from '@mui/icons-material/Layers';
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
 const DisplayUploadedFiles = lazy(() => import("./chat/DisplayUploadedFiles"));
 const DirectUserDialog = lazy(() => import("./chat/DirectUserDialog"));
-const ChatList = lazy(()=>import("./chat/ChatList"))
+const ChatList = lazy(() => import("./chat/ChatList"))
 
 function Messages() {
     const user = authenticateUser();
@@ -145,7 +145,7 @@ function Messages() {
                 if (messageScrollbarRef.current) {
                     setTimeout(() => {
                         messageScrollbarRef.current.scrollTop = messageScrollbarRef.current.scrollHeight;
-                    }, 1000);
+                    }, 2000);
                 }
                 $("#message_text").val("");
                 // messageTextRef.current.value 
@@ -157,15 +157,18 @@ function Messages() {
     });
     // for handle upload file 
     const handleUploadFileChange = (event) => {
-        formatFiles(event.target.files).then((formattedFiles)=>{
+        formatFiles(event.target.files).then((formattedFiles) => {
             console.log(formattedFiles)
             setFiles((prevFiles) => [...prevFiles, ...formattedFiles]);
             event.target.value = '';
-        }).catch((e)=>console.log(e.message));
+        }).catch((e) => console.log(e.message));
     }
     const handleChildData = (data) => {
         setFiles(data); // Update parent's state
     };
+    const handleDirectMessage = (data)=>{
+        setMessageTo(data.id,data.type);
+    }
 
     return (<>
         {/* Content body start */}
@@ -179,8 +182,8 @@ function Messages() {
                                 <Container className='m-0 p-0' maxWidth="lg">
                                     <Grid container item spacing={0.5}>
                                         {/* User/Group Listing start  */}
-                                        <Grid item lg={4} md={4} sm={12} className={files.length>0 ? "list-container hightup" : "list-container"}>
-                                            {directUserMessage ? <DirectUserDialog status={directUserMessage}></DirectUserDialog> : ""}
+                                        <Grid item lg={4} md={4} sm={12} className={files.length > 0 ? "list-container hightup" : "list-container"}>
+                                            {directUserMessage ? <DirectUserDialog status={directUserMessage} onDataChange={handleDirectMessage}></DirectUserDialog> : ""}
                                             <Paper elevation={3}>
                                                 <PerfectScrollbar
                                                     options={{
@@ -188,7 +191,7 @@ function Messages() {
                                                         wheelPropagation: true,
                                                         minScrollbarLength: 200
                                                     }}
-                                                    className={files.length>0 ? "chart-container hightup m-0 p-0" : "chart-container m-0 p-0"}
+                                                    className={files.length > 0 ? "chart-container hightup m-0 p-0" : "chart-container m-0 p-0"}
                                                 >
                                                     <div className="dlab-scroll chat-sidebar" style={{ height: "100%" }} id="chatSidebar">
                                                         <div className="d-flex align-items-center justify-content-between px-2">
@@ -261,7 +264,7 @@ function Messages() {
                                         </Grid>
                                         {/* End  */}
                                         {/* Chat Functionality Start  */}
-                                        <Grid item lg={8} md={8} sm={12} className={files.length>0 ? "msg-container hightup" : "msg-container"}>
+                                        <Grid item lg={8} md={8} sm={12} className={files.length > 0 ? "msg-container hightup" : "msg-container"}>
                                             <Paper elevation={3}>
                                                 <div className="d-flex justify-content-between align-items-center border-bottom px-3 pt-2 flex-wrap">
                                                     <div className="d-flex align-items-center pb-2">
@@ -305,7 +308,9 @@ function Messages() {
                                                             }}
                                                             containerRef={(ref) => (messageScrollbarRef.current = ref)}
                                                         >
-                                                        <ChatList messages={messages} loginUser={loginUser}></ChatList>
+                                                            <Suspense fallback={<div>Loading chat...</div>}>
+                                                                <ChatList messages={messages} loginUser={loginUser} />
+                                                            </Suspense>
                                                         </PerfectScrollbar>
                                                     </div>
                                                 </div>

@@ -7,17 +7,36 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import { Autocomplete, Box } from '@mui/material';
+import callApis from '../../services/CallAPI';
 
 export default function DirectUserDialog(props) {
     const [open, setOpen] = React.useState(true);
     const [selectedUser, setSelectedUser] = React.useState(null);
+    const [users, setUsers] = React.useState([]);
+    let backend_url = process.env.REACT_APP_SOCKET_URL ?? '';
     React.useEffect(() => {
         if (props.status) {
             setOpen(true);
         } else {
             setOpen(false);
         }
-    }, [props.status]);
+        //Now Get All Users through M1 API
+        async function getUsers() {
+            let resp = await callApis.callUserMicroPostApi("user-company-wise", {});
+            return resp;
+        }
+        if (users.length == 0) {
+            getUsers().then((data) => {
+                setUsers(data.data)
+            }).catch((err) => {
+                console.log(err.message)
+            });
+        }
+    }, [props.status, users]);
+    const updateToParent = function (id, type) {
+        // console.log(user_id,type)
+        props.onDataChange({ id, type });
+    }
     const handleClickOpen = () => {
         setOpen(true);
     };
@@ -35,34 +54,41 @@ export default function DirectUserDialog(props) {
                     component: 'form',
                     onSubmit: (event) => {
                         event.preventDefault();
-                        if(selectedUser==null){
+                        if (selectedUser == null) {
                             alert("Please Choose User.");
                         }
-                        else{
+                        else {
                             //CALL API
-                            console.log(selectedUser)
-                            handleClose();
+                            callApis.callUserMicroPostApi("/set-direct-user-message", { "user_id": selectedUser._id }).then((resp) => {
+                                if (resp.code === 200) {
+                                    updateToParent(selectedUser._id, "user")
+                                    handleClose()
+                                } else {
+                                    alert(resp.message);
+                                }
+                            }).catch((err) => {
+                                console.log(err.message);
+                            })
                         }
                     },
                 }}
             >
-                <DialogTitle>Subscribe</DialogTitle>
+                <DialogTitle>New Message</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        To subscribe to this website, please enter your email address here. We
-                        will send updates occasionally.
+                        A popup dialog to send messages directly to a specific user. Select users from your organization and send them a message.
                     </DialogContentText>
                     <Autocomplete
-                        className='mt-2'
+                        className='mt-3'
                         // id="Choose User"
                         sx={{ width: "100%" }}
-                        options={countries}
+                        options={users}
                         autoHighlight
                         name="user"
                         id="user"
                         value={selectedUser}
                         onChange={(event, newValue) => setSelectedUser(newValue)}
-                        getOptionLabel={(option) => option.label}
+                        getOptionLabel={(option) => option.f_name + " " + option.l_name}
                         renderOption={(props, option) => {
                             const { key, ...optionProps } = props;
                             return (
@@ -75,11 +101,11 @@ export default function DirectUserDialog(props) {
                                     <img
                                         loading="lazy"
                                         width="20"
-                                        srcSet={`https://tse2.mm.bing.net/th?id=OIP.fqSvfYQB0rQ-6EG_oqvonQHaHa&pid=Api&P=0&h=220 2x`}
-                                        src={`https://tse2.mm.bing.net/th?id=OIP.fqSvfYQB0rQ-6EG_oqvonQHaHa&pid=Api&P=0&h=220`}
+                                        srcSet={option.profile_image ? backend_url + "/" + option.profile_image : `https://tse2.mm.bing.net/th?id=OIP.fqSvfYQB0rQ-6EG_oqvonQHaHa&pid=Api&P=0&h=220 2x`}
+                                        src={option.profile_image ? backend_url + "/" + option.profile_image : `https://tse2.mm.bing.net/th?id=OIP.fqSvfYQB0rQ-6EG_oqvonQHaHa&pid=Api&P=0&h=220`}
                                         alt=""
                                     />
-                                    {option.label}
+                                    {option.f_name + " " + option.l_name}
                                 </Box>
                             );
                         }}
@@ -87,31 +113,19 @@ export default function DirectUserDialog(props) {
                             <TextField
                                 {...params}
                                 label="Choose User..."
-                                slotProps={{
-                                    htmlInput: {
-                                        ...params.inputProps,
-                                        autoComplete: 'new-password', // disable autocomplete and autofill
-                                    },
+                                inputProps={{
+                                    ...params.inputProps,
+                                    autoComplete: 'new-password', // disable autocomplete and autofill
                                 }}
                             />
                         )}
                     />
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleClose}>Cancel</Button>
-                    <Button type="submit">Subscribe</Button>
+                <DialogActions style={{marginRight:"1rem"}}>
+                    <Button type="submit" variant="outlined" color='primary'>Direct Message</Button>
+                    <Button onClick={handleClose} variant="outlined" color="warning">Cancel</Button>
                 </DialogActions>
             </Dialog>
         </React.Fragment>
     );
 }
-
-const countries = [
-    { code: 'AD', label: 'Andorra', phone: '376',user_id:1 },
-    {
-      code: 'AE',
-      label: 'United Arab Emirates',
-      phone: '971',
-      user_id:2
-    }
-];
