@@ -52,10 +52,11 @@ function Messages() {
     // Only for socket 
     useEffect(() => {
         console.log("user effect call 2");
-        getAllPrivateMessages('66b21db5874eedc1d745928d')
+        // getAllPrivateMessages('66b21db5874eedc1d745928d')
         getUserGroups();
         getUserList();
         getNewMessages();
+        getLastChat();
     }, []);
     // Get User Listing 
     function getUserList() {
@@ -76,6 +77,16 @@ function Messages() {
         return () => {
             socketRef.current.off("getUserGroups");
         };
+    }
+    // Get Last Chat User/Group 
+    function getLastChat() {
+        socketRef.current.emit("last_chat", {})
+        // socketRef.current.off("last_chat");
+        socketRef.current.once("last_chat", (data) => {
+            let last_chat = data.response;
+            if(last_chat.id && last_chat.type)
+                setMessageTo(last_chat.id,last_chat.type);
+        });
     }
     //Get New Messages When user send or receiver get message
     function getNewMessages() {
