@@ -41,6 +41,7 @@ function App() {
             <Route path="create-task" element={<CreateTask />} />
             <Route path="projects" element={<ProjectList/>} />
             <Route path="create-project" element={<CreateProject/>} />
+            <Route path="modify-project/:project_id" element={<CreateProject/>} />
             <Route path="tasks" element={<TasksList/>} />
             <Route path="task-view" element={<TaskDetails/>}/>
             <Route path="messages" element={<Messages/>}/>

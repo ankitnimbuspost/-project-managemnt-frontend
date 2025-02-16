@@ -1,9 +1,10 @@
 import * as React from 'react';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import {  Card, CardContent, Fab, FormControl, IconButton, InputLabel, MenuItem, Select } from '@mui/material';
-import { useRef, useState } from 'react'
+import { Card, CardContent, Fab, FormControl, IconButton, InputLabel, Menu, MenuItem, Select } from '@mui/material';
+import { useState } from 'react'
 import AddIcon from '@mui/icons-material/Add';
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 import callApis from '../services/CallAPI';
 import { Link, useNavigate } from 'react-router-dom';
@@ -19,6 +20,8 @@ const defaultTheme = createTheme();
 function CreateProject() {
     const navigate = useNavigate();
     const [projects, setProjects] = useState([]);
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [selectedRow, setSelectedRow] = useState(null);
     React.useEffect(() => {
         if (!authenticateUser()) {
             window.location.href = '/signin';
@@ -55,18 +58,20 @@ function CreateProject() {
         //         <div dangerouslySetInnerHTML={{ __html: params.value }} />
         //     ),
         // },
-        { field: 'status', headerName: 'Status', width: 80, renderCell: (params) => (
-            <span style={{ color: params.value === 1 ? "green" : "red", fontWeight: "bold" }}>
-                {params.value === 1 ? "Active" : "Inactive"}
-            </span>
-        ),},
+        {
+            field: 'status', headerName: 'Status', width: 80, renderCell: (params) => (
+                <span style={{ color: params.value === 1 ? "green" : "red", fontWeight: "bold" }}>
+                    {params.value === 1 ? "Active" : "Inactive"}
+                </span>
+            ),
+        },
         {
             field: 'project_owners',
             headerName: 'Assigned to',
             width: 350,
             renderCell: (params) => {
-                if (!params.value || !Array.isArray(params.value) || params.value.length==0) return "N/A";
-        
+                if (!params.value || !Array.isArray(params.value) || params.value.length == 0) return "N/A";
+
                 return (
                     <span>
                         {params.value.map(owner => `${owner.f_name} ${owner.l_name}`).join(", ")}
@@ -79,21 +84,49 @@ function CreateProject() {
         {
             field: 'edit',
             headerName: 'Action',
-            width: 50,
+            width: 80,
             sortable: false,
             renderCell: (params) => (
-                <IconButton
-                    onClick={() => handleEditClick(params.row._id)}
-                >
-                    <EditIcon />
-                </IconButton>
-            ),
+                <div>
+                    <IconButton onClick={(event) => handleMenuClick(event, params.row)}>
+                        <MoreVertIcon />
+                    </IconButton>
+                    <Menu
+                        anchorEl={anchorEl}
+                        open={Boolean(anchorEl) && selectedRow === params.row._id}
+                        onClose={handleClose}
+                    >
+                        <MenuItem onClick={handleEditClick}><EditIcon></EditIcon> Edit Project</MenuItem>
+                        <MenuItem onClick={handleDeleteClick}><AddIcon></AddIcon> Assign Project</MenuItem>
+                    </Menu>
+                </div>
+            )
         },
     ];
-    const handleEditClick = (id) => {
-        // Handle the edit action, e.g., open an edit dialog or navigate to an edit page
-        console.log(id)
-        console.log(`Edit button clicked for row with id: `,id);
+    // const handleEditClick = (id) => {
+    //     // Handle the edit action, e.g., open an edit dialog or navigate to an edit page
+    //     console.log(id)
+    //     console.log(`Edit button clicked for row with id: `, id);
+    // };
+    const handleMenuClick = (event, rowId) => {
+        setAnchorEl(event.currentTarget);
+        console.log(rowId._id)
+        setSelectedRow(rowId._id);
+    };
+
+    const handleClose = () => {
+        setAnchorEl(null);
+        setSelectedRow(null);
+    };
+
+    const handleEditClick = () => {
+        console.log("Edit clicked for row:", selectedRow);
+        handleClose();
+    };
+
+    const handleDeleteClick = () => {
+        console.log("Delete clicked for row:", selectedRow);
+        handleClose();
     };
     return (
         <>

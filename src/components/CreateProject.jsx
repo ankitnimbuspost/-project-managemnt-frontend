@@ -6,7 +6,7 @@ import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { Alert, Card, CardContent, CardHeader, FormControl,InputLabel, MenuItem, Select } from '@mui/material';
+import { Alert, Autocomplete, Card, CardContent, CardHeader, FormControl,InputLabel, MenuItem, Select } from '@mui/material';
 import { useRef, useState } from 'react'
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
@@ -26,12 +26,28 @@ function CreateProject() {
     const [editorData, setEditorData] = useState('');
     const [project, setProject] = React.useState('');
     const [projectStatus, setProjectStatus] = useState('');
-
+    const [project_owners,setProjectOwners] = useState([])
+    const [ownersData, setOwnersData] = useState([]);
     const navigate = useNavigate();
     React.useEffect(()=>{
         if(!authenticateUser())
           window.location.href = '/signin';
-    });
+          async function getUsers() {
+            let resp = await callApis.callUserMicroPostApi("user-company-wise", {});
+            return resp;
+        }
+        if (ownersData.length == 0) {
+            getUsers().then((data) => {
+                let users = [];
+                data.data.map((user)=>{
+                    users.push({label:user.f_name+" "+user.l_name,value:user._id});
+                });
+                setOwnersData(users)
+            }).catch((err) => {
+                console.log(err.message)
+            });
+        }
+    },[ownersData]);
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -52,10 +68,16 @@ function CreateProject() {
             submitRef.current.innerHTML = 'Please wait...';
             submitRef.current.disabled = true;
     
+            // Get Project Owners 
+            let users = [];
+            project_owners.map((user)=>{
+                users.push(user.value);
+            });
             let request = {
                 'project_name': projectNameRef.current.value,
                 'project_desc': editorData,
                 'status': projectStatus,
+                'project_owners':users
             }
 
             let resp = await callApis.callTaskMicroPostApi("create-project", request);
@@ -63,7 +85,7 @@ function CreateProject() {
                 setErrorState('')
                 setSuccessState(resp.message);
                 setTimeout(() => {
-                    navigate('/user/project-dashboard');
+                    navigate('/user/projects');
                 }, 2000);
             }
             else {
@@ -81,6 +103,9 @@ function CreateProject() {
     const handleStatusChange = (event) => {
         setProjectStatus(event.target.value);
     };
+    const handleOwnersChange = (event,users)=>{
+        setProjectOwners(users)
+    }
     return (
         <>
             {/* Content body start */}
@@ -153,6 +178,24 @@ function CreateProject() {
                                                         />
                                                         {/* <div dangerouslySetInnerHTML={{ __html: editorData }} /> */}
 
+                                                    </Grid>
+                                                    <Grid item xs={12} sm={12} lg={12}>
+                                                        <Autocomplete
+                                                            multiple
+                                                            id="select2"
+                                                            value={project_owners}
+                                                            onChange={handleOwnersChange}
+                                                            options={ownersData}
+                                                            getOptionLabel={(option) => option.label}
+                                                            renderInput={(params) => (
+                                                                <TextField
+                                                                    {...params}
+                                                                    variant="outlined"
+                                                                    label="Assign Project to users."
+                                                                    placeholder="Assign Project to users."
+                                                                />
+                                                            )}
+                                                        />
                                                     </Grid>
 
                                                     <Grid item xs={12}>
