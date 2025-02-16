@@ -58,7 +58,7 @@ function CreateProject() {
                 'status': projectStatus,
             }
 
-            let resp = await callApis.callTaskPostApi("create-project", request);
+            let resp = await callApis.callTaskMicroPostApi("create-project", request);
             if (resp.code === 200) {
                 setErrorState('')
                 setSuccessState(resp.message);

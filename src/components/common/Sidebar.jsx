@@ -28,7 +28,7 @@ export default function Sidebar() {
                         </Link>
                     </li>
                     <li className={menu==='tasks' ? 'mm-active' : ''}>
-                        <Link className="has-arrow " onClick={()=>setActiveMenu('tasks')} to={"#"} aria-expanded={menu==='tasks' ? 'true' : 'false'}>
+                        <Link className="has-arrow " onClick={()=>setActiveMenu('tasks')} to={"#"} ariaExpanded={menu==='tasks' ? 'true' : 'false'}>
                             <TaskAltIcon style={{color:'#96a0af'}}/>
                             <span className="nav-text">Tasks</span>
                         </Link>
@@ -45,7 +45,7 @@ export default function Sidebar() {
                         </ul>
                     </li>
                     <li className={menu==='issues' ? 'mm-active' : ''}>
-                        <Link className="has-arrow " onClick={()=>setActiveMenu('issues')} to={"#"} aria-expanded={menu==='issues' ? 'true' : 'false'}>
+                        <Link className="has-arrow " onClick={()=>setActiveMenu('issues')} to={"#"} ariaExpanded={menu==='issues' ? 'true' : 'false'}>
                            <BugReportIcon style={{color:'#96a0af'}}/>
                             <span className="nav-text">Issues</span>
                         </Link>

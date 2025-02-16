@@ -1,6 +1,8 @@
 import { Box, Card, CardContent, CardHeader, Container, FormControl, Grid, InputLabel, MenuItem, Select, TextField } from "@mui/material";
-import React, { lazy, useState } from "react";
+import React, { lazy, useEffect, useRef, useState } from "react";
 import "../../css/task-style.css";
+import { authenticateUser, formatFiles } from "../../services/CommonFunction";
+import micro_socket from "../../config/micro-socket";
 const TaskComment = lazy(() => import("./TaskComment"));
 const SubTask = lazy(() => import('./SubTask'));
 const LogHours = lazy(() => import("./LogHours"));
@@ -11,6 +13,40 @@ const Documents = lazy(()=>import("./Documents"));
 function TaskDetails(props) {
     const [taskStatus, setTaskStatus] = useState('1');
     const [currentTab, setCurrentTab] = useState('comments');
+    const [task,setTask] = useState(null);
+    let taskId = "66cefd16c838ac8b19f2e0d7";
+    
+    useEffect(() => {
+        console.log("Use effect 2 call")
+        if (!taskId) return;
+        // 🟢 Join the task room
+        micro_socket.emit("join_task", { task_id: taskId });
+
+        // 🟡 Listen for Initial Task Data
+        micro_socket.on("task_details", (response) => {
+            setTask(response.data);
+            console.log(response.data)
+        });
+        // Handle errors
+        micro_socket.on("error", (error) => {
+            console.error(error.message);
+        });
+
+        // 🔄 Listen for Real-time Task Updates
+        micro_socket.on("task_updated", (response) => {
+            if (response.data.id === taskId) {
+                setTask(response.data);
+            }
+        });
+
+        // 🔴 Cleanup: Leave Room When Component Unmounts
+        return () => {
+            micro_socket.emit("leave_task", { task_id: taskId });
+            micro_socket.off("task_details");
+            micro_socket.off("task_updated");
+        };
+    }, []);
+
     return <>
         {/* Content body start */}
         <div className="content-body">
@@ -22,6 +58,7 @@ function TaskDetails(props) {
                             <CardHeader title="Import options columns needs to be update." />
                             <CardContent className="m-0 p-0">
                                 <Container className="m-0 p-0" maxWidth="lg">
+                                    <p>{JSON.stringify(task)}</p>
                                     <div className="activity d-flex align-items-center mt-0 pt-0">
                                         <ul className="d-flex">
                                             <li><a href="javascript:void(0);" className="header-info">By Ankit Thakur</a></li>

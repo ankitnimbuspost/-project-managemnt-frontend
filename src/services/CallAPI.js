@@ -18,13 +18,13 @@ const callApis = {
         }
     },
 
-    callTaskMicroPostApi: async function(api_url,request){
+    callTaskMicroPostApi: async function(api_url,request,method="POST"){
         try{
             let user = JSON.parse(sessionStorage.getItem("user"));
-            console.log(user)
+            // console.log(user)
             const config = {
                 url:process.env.REACT_APP_API_TASK_MICRO_URL+api_url,
-                method:"POST",
+                method:method,
                 headers: { 
                     'Content-Type': 'application/json', 
                     'Authorization': 'Bearer '+user.access_token
@@ -32,7 +32,7 @@ const callApis = {
                 data:request
             };
             let response = await axios.request(config);
-            console.log("call "+api_url+" API")
+            // console.log("call "+api_url+" API")
             return response.data;
         }
         catch(err)

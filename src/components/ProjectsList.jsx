@@ -1,8 +1,7 @@
 import * as React from 'react';
-import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { Alert, Card, CardContent, CardHeader, Fab, FormControl, IconButton, InputLabel, MenuItem, Select } from '@mui/material';
+import {  Card, CardContent, Fab, FormControl, IconButton, InputLabel, MenuItem, Select } from '@mui/material';
 import { useRef, useState } from 'react'
 import AddIcon from '@mui/icons-material/Add';
 
@@ -11,6 +10,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { DataGrid } from '@mui/x-data-grid';
 import EditIcon from '@mui/icons-material/Edit';
 import { authenticateUser } from '../services/CommonFunction';
+const micro_socket = require("../config/micro-socket");
 
 
 
@@ -18,55 +18,82 @@ const defaultTheme = createTheme();
 
 function CreateProject() {
     const navigate = useNavigate();
-    React.useEffect(()=>{
-        if(!authenticateUser())
-          window.location.href = '/signin';
-    });
+    const [projects, setProjects] = useState([]);
+    React.useEffect(() => {
+        if (!authenticateUser()) {
+            window.location.href = '/signin';
+            return;
+        }
+
+        const loadProjects = async () => {
+            try {
+                let resp = await callApis.callTaskMicroPostApi("get-all-projects", {}, "GET");
+                console.log("API Response:", resp);
+
+                if (resp.code === 200) {
+                    setProjects(resp.data);
+                } else {
+                    alert("Something went wrong!!");
+                }
+            } catch (error) {
+                console.error("Error fetching projects:", error);
+                alert("Failed to load projects.");
+            }
+        };
+        loadProjects();
+    }, []);
+
     const columns = [
         { field: 'id', headerName: 'Sr. No', width: 50 },
-        { field: 'projectName', headerName: 'Project Name', width: 150 },
+        { field: 'project_name', headerName: 'Project Name', width: 150 },
+        // {
+        //     field: 'project_desc',
+        //     headerName: 'Project Descriptio',
+        //     description: 'This column has a value getter and is not sortable.',
+        //     sortable: false,
+        //     width: 300,renderCell: (params) => (
+        //         <div dangerouslySetInnerHTML={{ __html: params.value }} />
+        //     ),
+        // },
+        { field: 'status', headerName: 'Status', width: 80, renderCell: (params) => (
+            <span style={{ color: params.value === 1 ? "green" : "red", fontWeight: "bold" }}>
+                {params.value === 1 ? "Active" : "Inactive"}
+            </span>
+        ),},
         {
-            field: 'projectDesc',
-            headerName: 'Project Descriptio',
-            description: 'This column has a value getter and is not sortable.',
-            sortable: false,
-            width: 300,
+            field: 'project_owners',
+            headerName: 'Assigned to',
+            width: 350,
+            renderCell: (params) => {
+                if (!params.value || !Array.isArray(params.value) || params.value.length==0) return "N/A";
+        
+                return (
+                    <span>
+                        {params.value.map(owner => `${owner.f_name} ${owner.l_name}`).join(", ")}
+                    </span>
+                );
+            }
         },
-        { field: 'assignedBy', headerName: 'Assigned By', width: 250 },
-        { field: 'status', headerName: 'Status', width: 80 },
-        { field: 'created', headerName: 'Created', width: 90 },
+        { field: 'created', headerName: 'Created', width: 120 },
+        { field: 'updated', headerName: 'Last Modified', width: 120 },
         {
             field: 'edit',
-            headerName: 'Edit',
-            width: 60,
+            headerName: 'Action',
+            width: 50,
             sortable: false,
             renderCell: (params) => (
                 <IconButton
-                    onClick={() => handleEditClick(params)}
+                    onClick={() => handleEditClick(params.row._id)}
                 >
                     <EditIcon />
                 </IconButton>
             ),
         },
     ];
-
-    const rows = [
-        { id: 1, projectName: 'Moverick Media Monitering', projectDesc: 'Moverick Media Monitering long project description provide by client', assignedBy: "Ankit Kumar Thakur, Name 1, Name 2, Name 3,Name 4, Name 5", status: "Active",created:"01-01-2000" },
-        { id: 2, projectName: 'Moverick Media Monitering', projectDesc: 'Moverick Media Monitering long project description provide by client', assignedBy: "Ankit Kumar Thakur, Name 1, Name 2, Name 3,Name 4, Name 5", status: "Active" ,created:"01-01-2000"},
-        { id: 3, projectName: 'Moverick Media Monitering', projectDesc: 'Moverick Media Monitering long project description provide by client', assignedBy: "Ankit Kumar Thakur, Name 1, Name 2, Name 3,Name 4, Name 5", status: "Active",created:"01-01-2000" },
-        { id: 4, projectName: 'Moverick Media Monitering', projectDesc: 'Moverick Media Monitering long project description provide by client', assignedBy: "Ankit Kumar Thakur, Name 1, Name 2, Name 3,Name 4, Name 5", status: "Active",created:"01-01-2000" },
-        { id: 5, projectName: 'Moverick Media Monitering', projectDesc: 'Moverick Media Monitering long project description provide by client', assignedBy: "Ankit Kumar Thakur, Name 1, Name 2, Name 3,Name 4, Name 5", status: "Active",created:"01-01-2000" },
-        { id: 6, projectName: 'Moverick Media Monitering', projectDesc: 'Moverick Media Monitering long project description provide by client', assignedBy: "Ankit Kumar Thakur, Name 1, Name 2, Name 3,Name 4, Name 5", status: "Active",created:"01-01-2000" },
-        { id: 7, projectName: 'Moverick Media Monitering', projectDesc: 'Moverick Media Monitering long project description provide by client', assignedBy: "Ankit Kumar Thakur, Name 1, Name 2, Name 3,Name 4, Name 5", status: "Active",created:"01-01-2000" },
-        { id: 8, projectName: 'Moverick Media Monitering', projectDesc: 'Moverick Media Monitering long project description provide by client', assignedBy: "Ankit Kumar Thakur, Name 1, Name 2, Name 3,Name 4, Name 5", status: "Active",created:"01-01-2000" },
-        { id: 9, projectName: 'Moverick Media Monitering', projectDesc: 'Moverick Media Monitering long project description provide by client', assignedBy: "Ankit Kumar Thakur, Name 1, Name 2, Name 3,Name 4, Name 5", status: "Active",created:"01-01-2000" },
-        { id: 10, projectName: 'Moverick Media Monitering', projectDesc: 'Moverick Media Monitering long project description provide by client', assignedBy: "Ankit Kumar Thakur, Name 1, Name 2, Name 3,Name 4, Name 5", status: "Active",created:"01-01-2000" },
-        { id: 11, projectName: 'Moverick Media Monitering', projectDesc: 'Moverick Media Monitering long project description provide by client', assignedBy: "Ankit Kumar Thakur, Name 1, Name 2, Name 3,Name 4, Name 5", status: "Active",created:"01-01-2000" },
-    ];
     const handleEditClick = (id) => {
         // Handle the edit action, e.g., open an edit dialog or navigate to an edit page
         console.log(id)
-        console.log(`Edit button clicked for row with id: ${id}`);
+        console.log(`Edit button clicked for row with id: `,id);
     };
     return (
         <>
@@ -83,14 +110,14 @@ function CreateProject() {
                                             <h3>All Projects</h3>
                                         </div>
                                         <div className='col-6 float-right'>
-                                            <Link to={"/user/create-project"}><Fab color="primary" style={{float:"right",zIndex:"auto"}} size="small" aria-label="add">
+                                            <Link to={"/user/create-project"}><Fab color="primary" style={{ float: "right", zIndex: "auto" }} size="small" aria-label="add">
                                                 <AddIcon />
                                             </Fab></Link>
                                         </div>
                                     </div>
                                     <Container className='m-0 p-0' maxWidth="lg">
                                         <DataGrid
-                                            rows={rows}
+                                            rows={projects}
                                             columns={columns}
                                             initialState={{
                                                 pagination: {
